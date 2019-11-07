@@ -17,16 +17,23 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
+configurations.implementation.setCanBeResolved(true)
+File springAgent = configurations.implementation.filter { f -> f.name.matches("aspectjweaver.*\\.jar") }.iterator().next();
+if (!springAgent.exists())
+    throw new Exception("Missing aspectjweaver.jar");
+
 test {
     useTestNG() {
         useDefaultListeners = false
         testName "UnitTest"
         suiteName "UnitTestSuite"
     }
-    configurations.implementation.setCanBeResolved(true)
-    File springAgent = configurations.implementation.filter { f -> f.name.matches("aspectjweaver.*\\.jar") }.iterator().next();
-    if (!springAgent.exists())
-        throw new Exception("Missing aspectjweaver.jar");
     println springAgent
     jvmArgs += ["-javaagent:" + springAgent.absolutePath]
+}
+
+bootRun {
+    main = 'example.Application'
+    classpath sourceSets.main.runtimeClasspath
+    jvmArgs += ["-javaagent:" + springAgent.path]
 }
